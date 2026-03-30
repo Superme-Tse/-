@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>信長之野望 真戰（港澳茶餐廳版）配將模擬器</title>
-    <meta name="description" content="港澳版專用｜S1-S3全武將｜全戰法｜COST計算｜四維總和">
+    <title>信長之野望 真戰 配將模擬器（港澳茶餐廳終極版）</title>
+    <meta name="description" content="信長之野望 真戰 配將模擬器｜全武將｜全戰法｜COST計算｜四維總和｜戰法推薦">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { 
@@ -12,7 +12,7 @@
             background: #1a1a1a; color: #e0c080; 
             padding: 20px; line-height: 1.6;
         }
-        .container { max-width: 1200px; margin: 0 auto; }
+        .container { max-width: 1400px; margin: 0 auto; }
         
         /* 標題欄 */
         .header { 
@@ -68,7 +68,7 @@
             flex-wrap: wrap;
         }
         .officer-slot {
-            flex: 1; min-width: 300px;
+            flex: 1; min-width: 350px;
             background: rgba(40, 40, 40, 0.8);
             border: 1px solid #e0c080; border-radius: 10px;
             padding: 20px;
@@ -127,14 +127,26 @@
         }
         
         /* 重置按鈕 */
-        .action-bar { text-align: center; }
+        .action-bar { 
+            text-align: center; 
+            margin: 20px 0; 
+        }
         .btn-reset {
             background: #8b0000; color: #fff;
             border: 1px solid #e0c080; border-radius: 5px;
             padding: 10px 25px; font-size: 1rem;
             cursor: pointer; transition: background 0.3s;
+            margin: 0 10px;
         }
         .btn-reset:hover { background: #a00000; }
+        .btn-export {
+            background: #006400; color: #fff;
+            border: 1px solid #e0c080; border-radius: 5px;
+            padding: 10px 25px; font-size: 1rem;
+            cursor: pointer; transition: background 0.3s;
+            margin: 0 10px;
+        }
+        .btn-export:hover { background: #008000; }
         
         /* 兵種標示 */
         .troop-badge {
@@ -148,10 +160,57 @@
         .troop-gun { background: rgba(128, 0, 128, 0.3); color: #ff99ff; }
         .troop-ninja { background: rgba(0, 0, 0, 0.5); color: #cccccc; }
         
+        /* 推薦戰法區 */
+        .recommend-section {
+            background: rgba(224, 192, 128, 0.05);
+            border: 1px solid #e0c080; border-radius: 10px;
+            padding: 20px; margin-top: 30px;
+        }
+        .recommend-title {
+            font-size: 1.2rem; color: #e0c080;
+            margin-bottom: 15px; border-bottom: 1px solid rgba(224, 192, 128, 0.3);
+            padding-bottom: 10px;
+        }
+        .recommend-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+        }
+        .recommend-card {
+            background: rgba(40, 40, 40, 0.8);
+            border: 1px solid rgba(224, 192, 128, 0.3);
+            border-radius: 8px; padding: 15px;
+        }
+        .recommend-officer {
+            font-weight: bold; color: #e0c080;
+            margin-bottom: 5px;
+        }
+        .recommend-skill {
+            font-size: 0.9rem; color: #b0a060;
+        }
+        
+        /* 匯出結果區 */
+        .export-result {
+            background: rgba(0, 100, 0, 0.1);
+            border: 1px solid #006400; border-radius: 10px;
+            padding: 20px; margin-top: 30px;
+            display: none;
+        }
+        .export-title {
+            font-size: 1.2rem; color: #80c080;
+            margin-bottom: 15px;
+        }
+        .export-content {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px; border-radius: 5px;
+            font-family: monospace; white-space: pre-wrap;
+            color: #e0c080; max-height: 300px; overflow-y: auto;
+        }
+        
         @media (max-width: 768px) {
             .officers-row { flex-direction: column; }
             .control-bar { flex-direction: column; gap: 15px; }
             .stats-preview { justify-content: space-around; width: 100%; }
+            .recommend-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -159,8 +218,8 @@
     <div class="container">
         <!-- 標題 -->
         <div class="header">
-            <h1 class="site-title">信長之野望 真戰（港澳茶餐廳版）配將模擬器</h1>
-            <div class="site-subtitle">港澳版專用｜S1-S3全武將｜全戰法｜COST計算｜四維總和</div>
+            <h1 class="site-title">信長之野望 真戰 配將模擬器（港澳茶餐廳終極版）</h1>
+            <div class="site-subtitle">港澳茶餐廳終極版｜全84名武將｜全138種戰法｜COST計算｜四維總和｜戰法推薦｜隊伍匯出</div>
         </div>
         
         <!-- 頂部控制欄 -->
@@ -191,127 +250,288 @@
             <!-- 由 JavaScript 動態生成 -->
         </div>
 
-        <!-- 重置按鈕 -->
+        <!-- 按鈕區 -->
         <div class="action-bar">
             <button class="btn-reset" id="btnReset">重置隊伍</button>
+            <button class="btn-export" id="btnExport">匯出隊伍配置</button>
+        </div>
+
+        <!-- 匯出結果區 -->
+        <div class="export-result" id="exportResult">
+            <div class="export-title">隊伍配置匯出結果</div>
+            <div class="export-content" id="exportContent"></div>
+        </div>
+
+        <!-- 推薦戰法區 -->
+        <div class="recommend-section" id="recommendSection">
+            <div class="recommend-title">推薦戰法組合（根據當前隊伍）</div>
+            <div class="recommend-grid" id="recommendGrid">
+                <!-- 由 JavaScript 動態生成 -->
+            </div>
         </div>
     </div>
 
     <script>
-        // ==================== 港澳版武將資料庫 (Cost與名稱100%準確) ====================
+        // ==================== 信長之野望 真戰 完整武將資料庫 ====================
         const officersData = [
-            // 7C 核心大名
-            { id: 1, name: "織田信長", cost: 7, type: "鐵炮", innate: "天下布武", stats: { lead: 96, str: 88, int: 94, spd: 90 } },
+            // 7C 核心大名 (16名)
+            { id: 1, name: "織田信長", cost: 7, type: "鐵炮", innate: "新生", stats: { lead: 96, str: 88, int: 94, spd: 90 } },
             { id: 2, name: "武田信玄", cost: 7, type: "騎兵", innate: "風林火山", stats: { lead: 95, str: 92, int: 85, spd: 88 } },
             { id: 3, name: "上杉謙信", cost: 7, type: "騎兵", innate: "軍神", stats: { lead: 94, str: 90, int: 89, spd: 86 } },
+            { id: 4, name: "德川家康", cost: 7, type: "足輕", innate: "三河魂", stats: { lead: 92, str: 85, int: 88, spd: 82 } },
+            { id: 5, name: "豊臣秀吉", cost: 7, type: "足輕", innate: "千成瓢箪", stats: { lead: 89, str: 82, int: 95, spd: 84 } },
+            { id: 6, name: "毛利元就", cost: 7, type: "弓兵", innate: "百萬一心", stats: { lead: 91, str: 84, int: 93, spd: 85 } },
+            { id: 7, name: "明智光秀", cost: 7, type: "鐵炮", innate: "時は今", stats: { lead: 85, str: 84, int: 88, spd: 83 } },
+            { id: 8, name: "今川義元", cost: 7, type: "弓兵", innate: "海道一", stats: { lead: 84, str: 80, int: 86, spd: 78 } },
+            { id: 9, name: "長宗我部元親", cost: 7, type: "足輕", innate: "鬼若子", stats: { lead: 87, str: 85, int: 80, spd: 82 } },
+            { id: 10, name: "立花道雪", cost: 7, type: "鐵炮", innate: "電光雷轟", stats: { lead: 84, str: 82, int: 87, spd: 81 } },
+            { id: 11, name: "松永久秀", cost: 7, type: "鐵炮", innate: "梟雄之計", stats: { lead: 84, str: 82, int: 89, spd: 80 } },
+            { id: 12, name: "北條綱成", cost: 7, type: "足輕", innate: "地黄八幡", stats: { lead: 85, str: 87, int: 78, spd: 82 } },
+            { id: 13, name: "本願寺顕如", cost: 7, type: "足輕", innate: "一切皆空", stats: { lead: 83, str: 80, int: 85, spd: 79 } },
+            { id: 14, name: "本多忠勝", cost: 7, type: "足輕", innate: "古今獨步", stats: { lead: 93, str: 97, int: 70, spd: 86 } },
+            { id: 15, name: "陶晴賢", cost: 7, type: "鐵炮", innate: "冷徹無情", stats: { lead: 83, str: 85, int: 82, spd: 81 } },
+            { id: 16, name: "酒井忠次", cost: 7, type: "騎兵", innate: "破陣乱舞", stats: { lead: 84, str: 86, int: 79, spd: 83 } },
             
-            // 6C 主力大名
-            { id: 4, name: "德川家康", cost: 6, type: "足輕", innate: "三河魂", stats: { lead: 92, str: 85, int: 88, spd: 82 } },
-            { id: 5, name: "豐臣秀吉", cost: 6, type: "足輕", innate: "千成衾", stats: { lead: 89, str: 82, int: 95, spd: 84 } },
-            { id: 6, name: "真田幸村", cost: 6, type: "騎兵", innate: "六文錢", stats: { lead: 90, str: 95, int: 80, spd: 93 } },
-            { id: 7, name: "伊達政宗", cost: 6, type: "鐵炮", innate: "獨眼龍", stats: { lead: 88, str: 89, int: 86, spd: 91 } },
-            { id: 8, name: "毛利元就", cost: 6, type: "弓兵", innate: "三矢之訓", stats: { lead: 91, str: 84, int: 93, spd: 85 } },
-            { id: 9, name: "本多忠勝", cost: 6, type: "足輕", innate: "蜻蛉切", stats: { lead: 93, str: 97, int: 70, spd: 86 } },
-            { id: 10, name: "北條氏康", cost: 6, type: "足輕", innate: "相模之獅", stats: { lead: 90, str: 85, int: 88, spd: 82 } },
-            { id: 11, name: "島津義弘", cost: 6, type: "鐵炮", innate: "捨奸", stats: { lead: 89, str: 92, int: 80, spd: 87 } },
+            // 6C 主力武將 (23名)
+            { id: 17, name: "大内義隆", cost: 6, type: "弓兵", innate: "末世之道者", stats: { lead: 82, str: 75, int: 88, spd: 79 } },
+            { id: 18, name: "高橋紹運", cost: 6, type: "足輕", innate: "豐後之戰陣", stats: { lead: 85, str: 87, int: 76, spd: 82 } },
+            { id: 19, name: "前田慶次", cost: 6, type: "騎兵", innate: "天下御免", stats: { lead: 87, str: 91, int: 70, spd: 89 } },
+            { id: 20, name: "北條氏康", cost: 6, type: "足輕", innate: "相模之獅子", stats: { lead: 90, str: 85, int: 88, spd: 82 } },
+            { id: 21, name: "馬場信春", cost: 6, type: "騎兵", innate: "鬼美濃", stats: { lead: 87, str: 90, int: 75, spd: 82 } },
+            { id: 22, name: "柴田勝家", cost: 6, type: "騎兵", innate: "かかれ柴田", stats: { lead: 86, str: 90, int: 74, spd: 84 } },
+            { id: 23, name: "伊達晴宗", cost: 6, type: "足輕", innate: "掃疑平乱", stats: { lead: 83, str: 84, int: 80, spd: 81 } },
+            { id: 24, name: "前田利家", cost: 6, type: "騎兵", innate: "槍之又左", stats: { lead: 81, str: 85, int: 76, spd: 82 } },
+            { id: 25, name: "加藤清正", cost: 6, type: "足輕", innate: "破竹之勢", stats: { lead: 82, str: 87, int: 70, spd: 81 } },
+            { id: 26, name: "榊原康政", cost: 6, type: "騎兵", innate: "無想掃射", stats: { lead: 84, str: 86, int: 78, spd: 82 } },
+            { id: 27, name: "山本勘助", cost: 6, type: "弓兵", innate: "啄木鳥", stats: { lead: 81, str: 76, int: 91, spd: 79 } },
+            { id: 28, name: "内藤昌豐", cost: 6, type: "足輕", innate: "死灰復然", stats: { lead: 84, str: 85, int: 79, spd: 82 } },
+            { id: 29, name: "竹中半兵衛", cost: 6, type: "弓兵", innate: "十面埋伏", stats: { lead: 82, str: 75, int: 92, spd: 81 } },
+            { id: 30, name: "成田甲斐", cost: 6, type: "弓兵", innate: "東國無雙之麗", stats: { lead: 80, str: 78, int: 85, spd: 82 } },
+            { id: 31, name: "ねね", cost: 6, type: "足輕", innate: "比翼連理", stats: { lead: 78, str: 70, int: 90, spd: 79 } },
+            { id: 32, name: "帰蝶", cost: 6, type: "鐵炮", innate: "歸蝶之舞", stats: { lead: 79, str: 75, int: 88, spd: 80 } },
+            { id: 33, name: "宇佐美定滿", cost: 6, type: "弓兵", innate: "越後流軍學", stats: { lead: 82, str: 78, int: 87, spd: 80 } },
+            { id: 34, name: "甘粕景持", cost: 6, type: "騎兵", innate: "疾風怒濤", stats: { lead: 85, str: 88, int: 75, spd: 84 } },
+            { id: 35, name: "太田資正", cost: 6, type: "騎兵", innate: "三樂犬", stats: { lead: 84, str: 86, int: 78, spd: 82 } },
+            { id: 36, name: "板垣信方", cost: 6, type: "足輕", innate: "先手必勝", stats: { lead: 83, str: 85, int: 77, spd: 81 } },
+            { id: 37, name: "甘利虎泰", cost: 6, type: "騎兵", innate: "剛之武者", stats: { lead: 84, str: 87, int: 76, spd: 82 } },
+            { id: 38, name: "飯富虎昌", cost: 6, type: "騎兵", innate: "甲山猛虎", stats: { lead: 85, str: 88, int: 73, spd: 83 } },
+            { id: 39, name: "佐久間信盛", cost: 6, type: "足輕", innate: "陣前無我", stats: { lead: 82, str: 84, int: 76, spd: 80 } },
             
-            // 5C 中堅武將
-            { id: 12, name: "黑田官兵衛", cost: 5, type: "鐵炮", innate: "如水", stats: { lead: 85, str: 78, int: 93, spd: 83 } },
-            { id: 13, name: "竹中半兵衛", cost: 5, type: "弓兵", innate: "十面埋伏", stats: { lead: 82, str: 75, int: 92, spd: 81 } },
-            { id: 14, name: "前田慶次", cost: 5, type: "騎兵", innate: "天下御免", stats: { lead: 87, str: 91, int: 70, spd: 89 } },
-            { id: 15, name: "淺井長政", cost: 5, type: "足輕", innate: "赤尾血戰", stats: { lead: 86, str: 88, int: 80, spd: 84 } },
-            { id: 16, name: "今川義元", cost: 5, type: "弓兵", innate: "海道一弓", stats: { lead: 84, str: 80, int: 86, spd: 78 } },
-            { id: 17, name: "馬場信春", cost: 5, type: "騎兵", innate: "鬼美濃", stats: { lead: 87, str: 90, int: 75, spd: 82 } },
-            { id: 18, name: "齋藤道三", cost: 5, type: "鐵炮", innate: "美濃之蝮", stats: { lead: 83, str: 78, int: 90, spd: 80 } },
-            { id: 19, name: "明智光秀", cost: 5, type: "鐵炮", innate: "方今之時", stats: { lead: 85, str: 84, int: 88, spd: 83 } },
-            { id: 20, name: "山本勘助", cost: 5, type: "弓兵", innate: "啄木鳥", stats: { lead: 81, str: 76, int: 91, spd: 79 } },
-            { id: 21, name: "山県昌景", cost: 5, type: "騎兵", innate: "赤備突擊", stats: { lead: 86, str: 89, int: 72, spd: 85 } },
-            { id: 22, name: "太原雪齋", cost: 5, type: "弓兵", innate: "智謀", stats: { lead: 80, str: 70, int: 94, spd: 77 } },
-            { id: 23, name: "立花道雪", cost: 5, type: "鐵炮", innate: "雷神", stats: { lead: 84, str: 82, int: 87, spd: 81 } },
-            { id: 24, name: "鍋島直茂", cost: 5, type: "足輕", innate: "龍造寺之魂", stats: { lead: 82, str: 85, int: 80, spd: 83 } },
-            { id: 25, name: "朝倉宗滴", cost: 5, type: "足輕", innate: "越前之虎", stats: { lead: 83, str: 86, int: 78, spd: 82 } },
-            { id: 26, name: "柴田勝家", cost: 5, type: "騎兵", innate: "破竹", stats: { lead: 86, str: 90, int: 74, spd: 84 } },
-            { id: 27, name: "成田甲斐", cost: 5, type: "弓兵", innate: "女丈夫", stats: { lead: 80, str: 78, int: 85, spd: 82 } },
-            { id: 28, name: "飯富虎昌", cost: 5, type: "騎兵", innate: "赤備", stats: { lead: 85, str: 88, int: 73, spd: 83 } },
+            // 6C 其他武將
+            { id: 40, name: "荒木村重", cost: 6, type: "鐵炮", innate: "形影相弔", stats: { lead: 81, str: 80, int: 85, spd: 79 } },
+            { id: 41, name: "明智秀滿", cost: 6, type: "鐵炮", innate: "湖水渡り", stats: { lead: 82, str: 80, int: 86, spd: 80 } },
+            { id: 42, name: "妻木煕子", cost: 6, type: "弓兵", innate: "内助之賢", stats: { lead: 78, str: 70, int: 89, spd: 78 } },
+            { id: 43, name: "福島正則", cost: 6, type: "騎兵", innate: "七本槍筆頭", stats: { lead: 80, str: 85, int: 72, spd: 82 } },
+            { id: 44, name: "松平信康", cost: 6, type: "足輕", innate: "勇志不抜", stats: { lead: 82, str: 84, int: 76, spd: 81 } },
+            { id: 45, name: "壽桂尼", cost: 6, type: "弓兵", innate: "尼御台", stats: { lead: 77, str: 68, int: 88, spd: 77 } },
+            { id: 46, name: "大祝鶴", cost: 6, type: "弓兵", innate: "月華鶴影", stats: { lead: 79, str: 72, int: 85, spd: 79 } },
+            { id: 47, name: "淺井長政", cost: 6, type: "足輕", innate: "湖北仁義", stats: { lead: 86, str: 88, int: 80, spd: 84 } },
+            { id: 48, name: "島津貴久", cost: 6, type: "鐵炮", innate: "旋乾轉坤", stats: { lead: 82, str: 84, int: 80, spd: 81 } },
+            { id: 49, name: "真柄直隆", cost: 6, type: "足輕", innate: "怪力無雙", stats: { lead: 84, str: 89, int: 72, spd: 82 } },
+            { id: 50, name: "宮部継潤", cost: 6, type: "足輕", innate: "積水成淵", stats: { lead: 81, str: 80, int: 84, spd: 80 } },
             
-            // 4C 功能型武將
-            { id: 29, name: "雜賀孫市", cost: 4, type: "鐵炮", innate: "三段擊", stats: { lead: 80, str: 85, int: 75, spd: 82 } },
-            { id: 30, name: "阿市", cost: 4, type: "弓兵", innate: "祈願", stats: { lead: 78, str: 72, int: 88, spd: 79 } },
-            { id: 31, name: "服部半藏", cost: 4, type: "忍者", innate: "神出鬼沒", stats: { lead: 76, str: 82, int: 80, spd: 95 } },
-            { id: 32, name: "井伊直政", cost: 4, type: "騎兵", innate: "井伊赤鬼", stats: { lead: 82, str: 88, int: 70, spd: 85 } },
-            { id: 33, name: "大谷吉繼", cost: 4, type: "弓兵", innate: "大一大萬", stats: { lead: 78, str: 75, int: 89, spd: 76 } },
-            { id: 34, name: "山中鹿之介", cost: 4, type: "足輕", innate: "七難八苦", stats: { lead: 79, str: 84, int: 75, spd: 83 } },
-            { id: 35, name: "小早川隆景", cost: 4, type: "弓兵", innate: "智將", stats: { lead: 80, str: 76, int: 87, spd: 78 } },
-            { id: 36, name: "直江兼續", cost: 4, type: "足輕", innate: "愛", stats: { lead: 81, str: 78, int: 85, spd: 80 } },
-            { id: 37, name: "片倉景綱", cost: 4, type: "鐵炮", innate: "後見", stats: { lead: 77, str: 75, int: 86, spd: 81 } },
-            { id: 38, name: "島左近", cost: 4, type: "騎兵", innate: "剛勇", stats: { lead: 82, str: 87, int: 72, spd: 84 } },
-            { id: 39, name: "高坂昌信", cost: 4, type: "騎兵", innate: "逃彈正", stats: { lead: 79, str: 80, int: 76, spd: 82 } },
-            { id: 40, name: "真田昌幸", cost: 4, type: "足輕", innate: "表裏比興", stats: { lead: 78, str: 76, int: 89, spd: 79 } },
-            { id: 41, name: "蜂須賀小六", cost: 4, type: "足輕", innate: "野武士", stats: { lead: 77, str: 82, int: 75, spd: 80 } },
-            { id: 42, name: "前田利家", cost: 4, type: "騎兵", innate: "槍之又左", stats: { lead: 81, str: 85, int: 76, spd: 82 } },
-            { id: 43, name: "加藤清正", cost: 4, type: "足輕", innate: "虎加藤", stats: { lead: 82, str: 87, int: 70, spd: 81 } },
-            { id: 44, name: "福島正則", cost: 4, type: "騎兵", innate: "勇將", stats: { lead: 80, str: 85, int: 72, spd: 82 } },
-            { id: 45, name: "石田三成", cost: 4, type: "弓兵", innate: "治部少輔", stats: { lead: 77, str: 70, int: 90, spd: 78 } }
+            // 5C 武將 (34名)
+            { id: 51, name: "瑞溪院", cost: 5, type: "弓兵", innate: "諸行無常", stats: { lead: 78, str: 70, int: 87, spd: 77 } },
+            { id: 52, name: "相馬盛胤", cost: 5, type: "騎兵", innate: "先陣鼓舞", stats: { lead: 81, str: 83, int: 76, spd: 80 } },
+            { id: 53, name: "安東愛季", cost: 5, type: "弓兵", innate: "斗星北天", stats: { lead: 81, str: 76, int: 87, spd: 79 } },
+            { id: 54, name: "毛利隆元", cost: 5, type: "弓兵", innate: "一心一徳", stats: { lead: 82, str: 77, int: 86, spd: 80 } },
+            { id: 55, name: "本多正信", cost: 5, type: "足輕", innate: "非常之器", stats: { lead: 79, str: 72, int: 88, spd: 78 } },
+            { id: 56, name: "仙桃院", cost: 5, type: "弓兵", innate: "獻身", stats: { lead: 77, str: 69, int: 87, spd: 77 } },
+            { id: 57, name: "千坂景親", cost: 5, type: "足輕", innate: "耐苦鍛錬", stats: { lead: 80, str: 82, int: 76, spd: 79 } },
+            { id: 58, name: "樋口兼豐", cost: 5, type: "弓兵", innate: "密報通曉", stats: { lead: 80, str: 75, int: 87, spd: 79 } },
+            { id: 59, name: "小島弥太郎", cost: 5, type: "騎兵", innate: "鬼小島", stats: { lead: 82, str: 85, int: 74, spd: 81 } },
+            { id: 60, name: "一條信龍", cost: 5, type: "弓兵", innate: "不屈之精神", stats: { lead: 82, str: 84, int: 75, spd: 80 } },
+            { id: 61, name: "岡部元信", cost: 5, type: "足輕", innate: "洞察反撃", stats: { lead: 83, str: 85, int: 78, spd: 81 } },
+            { id: 62, name: "原虎胤", cost: 5, type: "足輕", innate: "夜叉美濃", stats: { lead: 82, str: 86, int: 75, spd: 81 } },
+            { id: 63, name: "稲葉一鉄", cost: 5, type: "足輕", innate: "一徹之意志", stats: { lead: 83, str: 85, int: 77, spd: 81 } },
+            { id: 64, name: "森可成", cost: 5, type: "足輕", innate: "攻め之三左", stats: { lead: 81, str: 84, int: 76, spd: 80 } },
+            { id: 65, name: "蜂須賀小六", cost: 5, type: "足輕", innate: "樓岸一番", stats: { lead: 77, str: 82, int: 75, spd: 80 } },
+            { id: 66, name: "高力清長", cost: 5, type: "足輕", innate: "仏之高力", stats: { lead: 79, str: 80, int: 78, spd: 79 } },
+            { id: 67, name: "尼子晴久", cost: 5, type: "弓兵", innate: "綱紀粛正", stats: { lead: 81, str: 78, int: 82, spd: 79 } },
+            { id: 68, name: "斎藤義龍", cost: 5, type: "足輕", innate: "傲岸不遜", stats: { lead: 80, str: 82, int: 78, spd: 80 } },
+            { id: 69, name: "南部晴政", cost: 5, type: "足輕", innate: "満ちゆく月", stats: { lead: 81, str: 83, int: 76, spd: 80 } },
+            { id: 70, name: "十河一存", cost: 5, type: "騎兵", innate: "鬼十河", stats: { lead: 82, str: 85, int: 75, spd: 81 } },
+            { id: 71, name: "津田算長", cost: 5, type: "鐵炮", innate: "津田流砲術", stats: { lead: 78, str: 76, int: 84, spd: 78 } },
+            { id: 72, name: "保科正俊", cost: 5, type: "足輕", innate: "槍彈正", stats: { lead: 80, str: 82, int: 77, spd: 80 } },
+            { id: 73, name: "里見義堯", cost: 5, type: "騎兵", innate: "仁者之沈勇", stats: { lead: 81, str: 82, int: 79, spd: 80 } },
+            { id: 74, name: "朝倉義景", cost: 5, type: "弓兵", innate: "公家風流", stats: { lead: 79, str: 76, int: 82, spd: 78 } },
+            { id: 75, name: "可児才蔵", cost: 5, type: "騎兵", innate: "笹之才蔵", stats: { lead: 80, str: 84, int: 74, spd: 81 } },
+            { id: 76, name: "諏訪姫", cost: 5, type: "弓兵", innate: "諏訪之光", stats: { lead: 80, str: 72, int: 86, spd: 78 } },
+            { id: 77, name: "黒田官兵衛", cost: 5, type: "鐵炮", innate: "水之如し", stats: { lead: 85, str: 78, int: 93, spd: 83 } },
+            { id: 78, name: "山県昌景", cost: 5, type: "騎兵", innate: "武田之赤備", stats: { lead: 86, str: 89, int: 72, spd: 85 } },
+            { id: 79, name: "齋藤道三", cost: 5, type: "鐵炮", innate: "美濃之蝮", stats: { lead: 83, str: 78, int: 90, spd: 80 } },
+            { id: 80, name: "太原雪齋", cost: 5, type: "弓兵", innate: "智謀", stats: { lead: 80, str: 70, int: 94, spd: 77 } },
+            { id: 81, name: "鍋島直茂", cost: 5, type: "足輕", innate: "龍造寺之魂", stats: { lead: 82, str: 85, int: 80, spd: 83 } },
+            { id: 82, name: "朝倉宗滴", cost: 5, type: "足輕", innate: "越前之虎", stats: { lead: 83, str: 86, int: 78, spd: 82 } },
+            { id: 83, name: "真田幸村", cost: 5, type: "騎兵", innate: "六文錢", stats: { lead: 90, str: 95, int: 80, spd: 93 } },
+            { id: 84, name: "伊達政宗", cost: 5, type: "鐵炮", innate: "獨眼龍", stats: { lead: 88, str: 89, int: 86, spd: 91 } }
         ];
 
-        // ==================== 港澳版完整戰法庫 (名稱100%準確) ====================
+        // ==================== 信長之野望 真戰 完整戰法庫 ====================
         const skillsData = [
-            // S級核心戰法
-            { id: 201, name: "氣焰萬丈", type: "能動", effect: "T0兵刃爆發" },
-            { id: 202, name: "理非曲直", type: "突擊", effect: "突擊+混亂控制" },
-            { id: 203, name: "大器之蘊", type: "事件", effect: "第五回合起群體治療" },
+            // 事件戰法 (8種)
+            { id: 301, name: "家中整序", type: "能動", effect: "計略傷害+多體恢復" },
+            { id: 302, name: "破天之轟", type: "能動", effect: "火傷+統率降低" },
+            { id: 303, name: "姻戚同盟", type: "能動", effect: "傷害分擔" },
+            { id: 304, name: "離心之計", type: "能動", effect: "敵方混亂" },
+            { id: 305, name: "城盜り", type: "能動", effect: "城池特攻" },
+            { id: 306, name: "專橫專斷", type: "能動", effect: "強力單體控制" },
+            { id: 307, name: "自立之志", type: "能動", effect: "屬性成長型戰法" },
+            { id: 308, name: "機に乗ず", type: "突擊", effect: "突擊降屬性" },
             
-            // S1 基礎戰法
-            { id: 101, name: "草木皆兵", type: "能動", effect: "計略傷害+多體恢復" },
-            { id: 102, name: "一力當先", type: "能動", effect: "普攻火力+亂舞" },
-            { id: 103, name: "乘勝追擊", type: "突擊", effect: "普攻後追擊" },
-            { id: 104, name: "千軍辟易", type: "能動", effect: "範圍兵刃傷害" },
-            { id: 105, name: "回天轉運", type: "能動", effect: "恢復+增益" },
-            { id: 106, name: "有備無患", type: "能動", effect: "防禦強化" },
-            { id: 107, name: "警戒周到", type: "指揮", effect: "全隊防禦" },
-            { id: 108, name: "水攻干計", type: "能動", effect: "計略+持續傷害" },
-            { id: 109, name: "五里霧中", type: "能動", effect: "混亂+減益" },
-            { id: 110, name: "深慮遠謀", type: "指揮", effect: "全隊增益" },
-            { id: 111, name: "一上一下", type: "受動", effect: "反擊機制" },
-            { id: 112, name: "一行三昧", type: "受動", effect: "被動治療" },
-            { id: 113, name: "獨立獨步", type: "受動", effect: "單體生存" },
-            { id: 114, name: "一領具足", type: "指揮", effect: "全隊統率" },
-            { id: 115, name: "矢石飛交", type: "能動", effect: "多段兵刃" },
-            { id: 116, name: "一刀兩斷", type: "突擊", effect: "高倍追擊" },
-            { id: 117, name: "奮戰", type: "能動", effect: "連擊代價" },
-            { id: 118, name: "槍彈正", type: "能動", effect: "單體爆發" },
+            // 傳授能動戰法 (20種)
+            { id: 401, name: "靜動自在", type: "能動", effect: "洞察+先攻" },
+            { id: 402, name: "縦橫馳突", type: "能動", effect: "連擊+封撃耐性" },
+            { id: 403, name: "紅蓮之炎", type: "能動", effect: "火傷持續傷害" },
+            { id: 404, name: "水攻干計", type: "能動", effect: "水攻+回復不可" },
+            { id: 405, name: "所領役帳", type: "能動", effect: "回復+回生" },
+            { id: 406, name: "霹靂一撃", type: "能動", effect: "高傷+麻痺" },
+            { id: 407, name: "千軍辟易", type: "能動", effect: "範圍兵刃傷害" },
+            { id: 408, name: "一力當先", type: "能動", effect: "普攻火力+亂舞" },
+            { id: 409, name: "所向無敵", type: "能動", effect: "全體兵刃傷害" },
+            { id: 410, name: "草木皆兵", type: "能動", effect: "計略傷害+多體恢復" },
+            { id: 411, name: "回天轉運", type: "能動", effect: "回復+增益" },
+            { id: 412, name: "大智不智", type: "能動", effect: "消沈+增傷" },
+            { id: 413, name: "前後挾撃", type: "能動", effect: "連撃獲得" },
+            { id: 414, name: "五里霧中", type: "能動", effect: "混亂控制" },
+            { id: 415, name: "歸還之凱歌", type: "能動", effect: "回復兵力" },
+            { id: 416, name: "金鼓連天", type: "能動", effect: "增傷+減傷" },
+            { id: 417, name: "奇謀獨斷", type: "能動", effect: "無策控制" },
+            { id: 418, name: "剛毅果斷", type: "能動", effect: "突撃增傷" },
+            { id: 419, name: "陣形崩し", type: "能動", effect: "降屬性+傷害" },
+            { id: 420, name: "嚢沙之計", type: "能動", effect: "水攻+增傷" },
             
-            // S2 事件戰法
-            { id: 301, name: "立身之志", type: "事件", effect: "屬性成長型戰法" },
-            { id: 302, name: "專橫專斷", type: "事件", effect: "強力單體控制" },
-            { id: 303, name: "同盟姻親", type: "事件", effect: "聯動增益" },
-            { id: 304, name: "乘虛而入", type: "事件", effect: "低兵力時高傷" },
-            { id: 305, name: "斬雷神", type: "事件", effect: "爆發+驅散" },
-            { id: 306, name: "疑兵盜城", type: "事件", effect: "計略+攻城特化" },
+            // 固有能動戰法 (39種)
+            { id: 501, name: "先陣鼓舞", type: "能動", effect: "兵刃傷害+固有戰法提升" },
+            { id: 502, name: "時は今", type: "能動", effect: "多種狀態付與" },
+            { id: 503, name: "相模之獅子", type: "能動", effect: "鐵壁防護" },
+            { id: 504, name: "梟雄之計", type: "能動", effect: "計略傷害+狀態" },
+            { id: 505, name: "地黄八幡", type: "能動", effect: "全體兵刃傷害+控制" },
+            { id: 506, name: "かかれ柴田", type: "能動", effect: "弱體浄化+全體傷害" },
+            { id: 507, name: "掃疑平乱", type: "能動", effect: "亂舞+速度提升" },
+            { id: 508, name: "斗星北天", type: "能動", effect: "洞察+屬性提升" },
+            { id: 509, name: "無想掃射", type: "能動", effect: "兵刃傷害+增傷" },
+            { id: 510, name: "啄木鳥", type: "能動", effect: "計略+兵刃連攜" },
+            { id: 511, name: "冷徹無情", type: "能動", effect: "兵刃傷害+發動率提升" },
+            { id: 512, name: "死灰復然", type: "能動", effect: "回復+減傷" },
+            { id: 513, name: "一心一徳", type: "能動", effect: "回復+休養" },
+            { id: 514, name: "疾風怒濤", type: "能動", effect: "會心+兵刃傷害" },
+            { id: 515, name: "先制攻撃", type: "能動", effect: "計略傷害+增傷" },
+            { id: 516, name: "密報通曉", type: "能動", effect: "洞察+攪亂" },
+            { id: 517, name: "三楽犬", type: "能動", effect: "先攻+標記" },
+            { id: 518, name: "先手必勝", type: "能動", effect: "計略傷害+增傷" },
+            { id: 519, name: "不屈之精神", type: "能動", effect: "反撃+武勇提升" },
+            { id: 520, name: "洞察反撃", type: "能動", effect: "洞察+計略傷害" },
+            { id: 521, name: "甲山猛虎", type: "能動", effect: "兵刃傷害+封撃" },
+            { id: 522, name: "諏訪之光", type: "能動", effect: "弱體浄化+屬性提升" },
+            { id: 523, name: "陣前無我", type: "能動", effect: "挑発+牽制" },
+            { id: 524, name: "一徹之意志", type: "能動", effect: "挑発+鐵壁" },
+            { id: 525, name: "形影相弔", type: "能動", effect: "計略傷害" },
+            { id: 526, name: "湖水渡り", type: "能動", effect: "奇策獲得" },
+            { id: 527, name: "攻め之三左", type: "能動", effect: "兵刃傷害+潰走" },
+            { id: 528, name: "笹之才蔵", type: "能動", effect: "高傷+回復不可" },
+            { id: 529, name: "破陣乱舞", type: "能動", effect: "破陣+追加攻擊" },
+            { id: 530, name: "仏之高力", type: "能動", effect: "能動戰法提升" },
+            { id: 531, name: "勇志不抜", type: "能動", effect: "傷害分擔+離反" },
+            { id: 532, name: "綱紀粛正", type: "能動", effect: "計略傷害+威圧" },
+            { id: 533, name: "公家風流", type: "能動", effect: "先攻+增傷" },
+            { id: 534, name: "傲岸不遜", type: "能動", effect: "兵刃傷害+挑発" },
+            { id: 535, name: "満ちゆく月", type: "能動", effect: "潰走+減傷" },
+            { id: 536, name: "旋乾轉坤", type: "能動", effect: "計略傷害+恐慌" },
+            { id: 537, name: "津田流砲術", type: "能動", effect: "計略傷害+隨機狀態" },
+            { id: 538, name: "怪力無雙", type: "能動", effect: "高額兵刃傷害" },
+            { id: 539, name: "積水成淵", type: "能動", effect: "心攻+水攻" },
             
-            // S3 新戰法
-            { id: 401, name: "合盟之陣", type: "指揮", effect: "S3新事件戰法" },
-            { id: 402, name: "鬼美濃諫信玄", type: "事件", effect: "S3新事件戰法" },
-            { id: 403, name: "鬼十河落馬", type: "事件", effect: "S3新事件戰法" },
+            // 突撃戰法 (15種)
+            { id: 601, name: "亂世之華", type: "突擊", effect: "兵刃+計略雙重傷害" },
+            { id: 602, name: "境目奮戰", type: "突擊", effect: "計略傷害+回復降低" },
+            { id: 603, name: "仁者之沈勇", type: "突擊", effect: "計略連攜傷害" },
+            { id: 604, name: "天下御免", type: "突擊", effect: "高傷+混亂" },
+            { id: 605, name: "海道一", type: "突擊", effect: "射撃傷害" },
+            { id: 606, name: "電光雷轟", type: "突擊", effect: "麻痺+雷鳴傷害" },
+            { id: 607, name: "鬼小島", type: "突擊", effect: "高額兵刃傷害" },
+            { id: 608, name: "剛之武者", type: "突擊", effect: "兵刃傷害+減傷" },
+            { id: 609, name: "樓岸一番", type: "突擊", effect: "雙屬性傷害" },
+            { id: 610, name: "鬼十河", type: "突擊", effect: "兵刃傷害+威圧" },
+            { id: 611, name: "回山倒海", type: "突擊", effect: "兵刃傷害+潰走" },
+            { id: 612, name: "一刀両斷", type: "突擊", effect: "追加兵刃傷害" },
+            { id: 613, name: "荒切", type: "突擊", effect: "連擊獲得" },
+            { id: 614, name: "一触即發", type: "突擊", effect: "降統率+無策" },
+            { id: 615, name: "槍之鈴", type: "突擊", effect: "兵刃傷害+回復" },
             
-            // 其他常用戰法
-            { id: 501, name: "風林火山", type: "指揮", effect: "全隊攻防速" },
-            { id: 502, name: "軍神", type: "能動", effect: "高傷+混亂" },
-            { id: 503, name: "三段擊", type: "能動", effect: "鐵炮多段" },
-            { id: 504, name: "火矢", type: "能動", effect: "火攻+持續傷害" },
-            { id: 505, name: "落石", type: "能動", effect: "兵刃傷害+控制" },
-            { id: 506, name: "治療", type: "能動", effect: "單體大恢復" },
-            { id: 507, name: "鼓舞", type: "能動", effect: "全體攻擊提升" },
-            { id: 508, name: "火牛計", type: "能動", effect: "計略傷害+混亂" },
+            // 指揮戰法 (16種)
+            { id: 701, name: "知者楽水", type: "指揮", effect: "全隊減傷" },
+            { id: 702, name: "末世之道者", type: "指揮", effect: "計略增傷" },
+            { id: 703, name: "諸行無常", type: "指揮", effect: "增傷+減傷" },
+            { id: 704, name: "新生", type: "指揮", effect: "增傷+回復" },
+            { id: 705, name: "三河魂", type: "指揮", effect: "降屬性+援護" },
+            { id: 706, name: "百萬一心", type: "指揮", effect: "戰法阻止+傷害" },
+            { id: 707, name: "千成瓢箪", type: "指揮", effect: "每回合回復" },
+            { id: 708, name: "鬼若子", type: "指揮", effect: "連擊+統率提升" },
+            { id: 709, name: "比翼連理", type: "指揮", effect: "回復蓄積傷害" },
+            { id: 710, name: "越後流軍學", type: "指揮", effect: "能動戰法提升" },
+            { id: 711, name: "非常之器", type: "指揮", effect: "回避+休養" },
+            { id: 712, name: "獻身", type: "指揮", effect: "異性連攜傷害" },
+            { id: 713, name: "耐苦鍛錬", type: "指揮", effect: "屬性成長+全體傷害" },
+            { id: 714, name: "内助之賢", type: "指揮", effect: "狀態延長+回復" },
+            { id: 715, name: "尼御台", type: "指揮", effect: "洞察+離反" },
+            { id: 716, name: "月華鶴影", type: "指揮", effect: "反擊傷害+會心" },
             
-            // 兵種戰法
-            { id: 601, name: "甲斐弓騎兵", type: "兵種", effect: "弓騎兵專用" },
-            { id: 602, name: "僧兵", type: "兵種", effect: "僧兵專用" },
-            { id: 603, name: "大太刀力士隊", type: "兵種", effect: "力士專用" },
-            { id: 604, name: "鐵砲僧兵", type: "兵種", effect: "鐵炮僧兵" },
-            { id: 605, name: "赤備え隊", type: "兵種", effect: "赤備騎兵" },
-            { id: 606, name: "三河弓兵隊", type: "兵種", effect: "三河弓兵" },
-            { id: 607, name: "薩摩鐵炮隊", type: "兵種", effect: "薩摩鐵炮" }
+            // 受動戰法 (14種)
+            { id: 801, name: "雷神斬り", type: "受動", effect: "會心+武勇提升" },
+            { id: 802, name: "水之如し", type: "受動", effect: "奇策+計略傷害" },
+            { id: 803, name: "豐後之戰陣", type: "受動", effect: "洞察+屬性強化" },
+            { id: 804, name: "武田之赤備", type: "受動", effect: "會心+赤備突擊" },
+            { id: 805, name: "軍神", type: "受動", effect: "連攜增傷" },
+            { id: 806, name: "鬼美濃", type: "受動", effect: "弱體浄化+回復" },
+            { id: 807, name: "一切皆空", type: "受動", effect: "一揆傷害+回復" },
+            { id: 808, name: "古今獨步", type: "受動", effect: "反擊+離反" },
+            { id: 809, name: "槍之又左", type: "受動", effect: "鐵壁+強化攻擊" },
+            { id: 810, name: "破竹之勢", type: "受動", effect: "會心成長" },
+            { id: 811, name: "東國無雙之麗", type: "受動", effect: "連擊+武勇提升" },
+            { id: 812, name: "歸蝶之舞", type: "受動", effect: "降屬性+混亂" },
+            { id: 813, name: "夜叉美濃", type: "受動", effect: "減傷特化" },
+            { id: 814, name: "七本槍筆頭", type: "受動", effect: "亂舞+目標鎖定" },
+            
+            // 兵種戰法 (8種)
+            { id: 901, name: "母衣武者", type: "兵種", effect: "騎兵進化" },
+            { id: 902, name: "甲斐弓騎兵", type: "兵種", effect: "弓兵進化" },
+            { id: 903, name: "赤備え隊", type: "兵種", effect: "騎兵進化" },
+            { id: 904, name: "三河弓兵隊", type: "兵種", effect: "弓兵進化" },
+            { id: 905, name: "薩摩鐵砲兵", type: "兵種", effect: "鐵炮進化" },
+            { id: 906, name: "鐵砲僧兵", type: "兵種", effect: "鐵炮進化" },
+            { id: 907, name: "大太刀力士隊", type: "兵種", effect: "足輕進化" },
+            { id: 908, name: "僧兵", type: "兵種", effect: "足輕進化" },
+            
+            // 常用基礎戰法 (18種)
+            { id: 1001, name: "草木皆兵", type: "能動", effect: "計略傷害+多體恢復" },
+            { id: 1002, name: "一力當先", type: "能動", effect: "普攻火力+亂舞" },
+            { id: 1003, name: "乘勝追撃", type: "突擊", effect: "普攻後追擊" },
+            { id: 1004, name: "千軍辟易", type: "能動", effect: "範圍兵刃傷害" },
+            { id: 1005, name: "回天轉運", type: "能動", effect: "恢復+增益" },
+            { id: 1006, name: "有備無患", type: "能動", effect: "防禦強化" },
+            { id: 1007, name: "警戒周到", type: "指揮", effect: "全隊防禦" },
+            { id: 1008, name: "水攻干計", type: "能動", effect: "計略+持續傷害" },
+            { id: 1009, name: "五里霧中", type: "能動", effect: "混亂+減益" },
+            { id: 1010, name: "深慮遠謀", type: "指揮", effect: "全隊增益" },
+            { id: 1011, name: "一上一下", type: "受動", effect: "反擊機制" },
+            { id: 1012, name: "一行三昧", type: "受動", effect: "被動治療" },
+            { id: 1013, name: "獨立獨步", type: "受動", effect: "單體生存" },
+            { id: 1014, name: "一領具足", type: "指揮", effect: "全隊統率" },
+            { id: 1015, name: "矢石飛交", type: "能動", effect: "多段兵刃" },
+            { id: 1016, name: "一刀兩斷", type: "突擊", effect: "高倍追擊" },
+            { id: 1017, name: "奮戰", type: "能動", effect: "連擊代價" },
+            { id: 1018, name: "槍彈正", type: "能動", effect: "單體爆發" }
+        ];
+
+        // 推薦戰法組合
+        const recommendCombos = [
+            { name: "騎兵爆發隊", skills: ["一力當先", "亂世之華", "母衣武者"], description: "高機動爆發組合" },
+            { name: "鐵炮控制隊", skills: ["水攻干計", "五里霧中", "薩摩鐵砲兵"], description: "計略控制組合" },
+            { name: "足輕防禦隊", skills: ["警戒周到", "有備無患", "僧兵"], description: "堅固防禦組合" },
+            { name: "弓兵回復隊", skills: ["草木皆兵", "回天轉運", "三河弓兵隊"], description: "治療回復組合" },
+            { name: "混合輸出隊", skills: ["千軍辟易", "所向無敵", "赤備え隊"], description: "全體輸出組合" },
+            { name: "控制干擾隊", skills: ["奇謀獨斷", "陣形崩し", "嚢沙之計"], description: "干擾控制組合" }
         ];
 
         // 兵種顏色映射
@@ -319,8 +539,7 @@
             "騎兵": "troop-cavalry",
             "足輕": "troop-infantry",
             "弓兵": "troop-archer",
-            "鐵炮": "troop-gun",
-            "忍者": "troop-ninja"
+            "鐵炮": "troop-gun"
         };
 
         // ==================== 初始化頁面 ====================
@@ -329,9 +548,13 @@
             for (let i = 1; i <= 3; i++) {
                 officerSlots.innerHTML += createOfficerSlot(i);
             }
+            
             updateTotalCost();
             updatePreviewStats();
+            updateRecommendations();
+            
             document.getElementById('btnReset').addEventListener('click', resetTeam);
+            document.getElementById('btnExport').addEventListener('click', exportTeam);
         });
 
         function createOfficerSlot(slotId) {
@@ -345,7 +568,7 @@
                             <select class="officer-select" onchange="onOfficerChange(${slotId})">
                                 <option value="">-- 選擇武將 (共${officersData.length}名) --</option>
                                 ${officersData.map(o => 
-                                    `<option value="${o.id}">${o.name} (${o.cost}C) | 固:${o.innate}</option>`
+                                    `<option value="${o.id}">${o.name} (${o.cost}C) | ${o.type} | 固:${o.innate}</option>`
                                 ).join('')}
                             </select>
                         </div>
@@ -368,7 +591,7 @@
                             <select class="skill-select" onchange="onSkillChange(${slotId}, 1)">
                                 <option value="">-- 選擇戰法 (共${skillsData.length}個) --</option>
                                 ${skillsData.map(s => 
-                                    `<option value="${s.id}">${s.name} (${s.type})</option>`
+                                    `<option value="${s.id}">${s.name} (${s.type}) - ${s.effect}</option>`
                                 ).join('')}
                             </select>
                         </div>
@@ -377,7 +600,7 @@
                             <select class="skill-select" onchange="onSkillChange(${slotId}, 2)">
                                 <option value="">-- 選擇戰法 (共${skillsData.length}個) --</option>
                                 ${skillsData.map(s => 
-                                    `<option value="${s.id}">${s.name} (${s.type})</option>`
+                                    `<option value="${s.id}">${s.name} (${s.type}) - ${s.effect}</option>`
                                 ).join('')}
                             </select>
                         </div>
@@ -393,9 +616,8 @@
             const officer = officersData.find(o => o.id === officerId);
 
             if (officer) {
-                // 更新頭像文字
                 document.getElementById(`avatarText${slotId}`).textContent = officer.name.charAt(0);
-                // 更新屬性
+                
                 const statsEl = document.getElementById(`stats${slotId}`);
                 statsEl.innerHTML = `
                     <div class="stat-card"><div class="label">統率</div><div class="value">${officer.stats.lead}</div></div>
@@ -403,29 +625,25 @@
                     <div class="stat-card"><div class="label">智力</div><div class="value">${officer.stats.int}</div></div>
                     <div class="stat-card"><div class="label">速度</div><div class="value">${officer.stats.spd}</div></div>
                 `;
-                // 更新固有戰法
-                document.getElementById(`innate${slotId}`).value = officer.innate;
+                
+                document.getElementById(`innate${slotId}`).value = `${officer.innate} (${officer.type})`;
             } else {
-                document.getElementById(`avatarText${slotId}`).textContent = "將";
-                document.getElementById(`stats${slotId}`).innerHTML = `
-                    <div class="stat-card"><div class="label">統率</div><div class="value">--</div></div>
-                    <div class="stat-card"><div class="label">武力</div><div class="value">--</div></div>
-                    <div class="stat-card"><div class="label">智力</div><div class="value">--</div></div>
-                    <div class="stat-card"><div class="label">速度</div><div class="value">--</div></div>
-                `;
-                document.getElementById(`innate${slotId}`).value = "未選擇";
+                resetSlot(slotId);
             }
             updateTotalCost();
             updatePreviewStats();
+            updateRecommendations();
         }
 
         function onSkillChange(slotId, skillNum) {
             const select = document.querySelector(`.officer-slot[data-slot="${slotId}"] .skill-item:nth-child(${skillNum + 1}) select`);
             const skillId = parseInt(select.value);
             const skill = skillsData.find(s => s.id === skillId);
+            
             if (skill) {
                 console.log(`[戰法選擇] 武將槽 ${slotId} 戰法${skillNum}: ${skill.name} (${skill.type})`);
             }
+            updateRecommendations();
         }
 
         function updateTotalCost() {
@@ -447,6 +665,8 @@
 
         function updatePreviewStats() {
             let leadSum = 0, strSum = 0, intSum = 0, spdSum = 0;
+            let officerCount = 0;
+            
             document.querySelectorAll('.officer-select').forEach(select => {
                 const id = parseInt(select.value);
                 if (id) {
@@ -455,33 +675,139 @@
                     strSum += officer.stats.str;
                     intSum += officer.stats.int;
                     spdSum += officer.stats.spd;
+                    officerCount++;
                 }
             });
+            
             document.getElementById('sumLeadership').textContent = leadSum;
             document.getElementById('sumStrength').textContent = strSum;
             document.getElementById('sumIntelligence').textContent = intSum;
             document.getElementById('sumSpeed').textContent = spdSum;
         }
 
+        function updateRecommendations() {
+            const selectedOfficers = [];
+            const selectedSkills = [];
+            
+            document.querySelectorAll('.officer-select').forEach(select => {
+                const id = parseInt(select.value);
+                if (id) {
+                    const officer = officersData.find(o => o.id === id);
+                    selectedOfficers.push(officer);
+                }
+            });
+            
+            document.querySelectorAll('.skill-select').forEach(select => {
+                if (select.tagName === 'SELECT' && select.value) {
+                    const skillId = parseInt(select.value);
+                    const skill = skillsData.find(s => s.id === skillId);
+                    if (skill) selectedSkills.push(skill);
+                }
+            });
+            
+            const recommendGrid = document.getElementById('recommendGrid');
+            recommendGrid.innerHTML = '';
+            
+            recommendCombos.forEach(combo => {
+                const card = document.createElement('div');
+                card.className = 'recommend-card';
+                card.innerHTML = `
+                    <div class="recommend-officer">${combo.name}</div>
+                    <div class="recommend-skill">戰法組合: ${combo.skills.join(', ')}</div>
+                    <div class="recommend-skill">戰術特點: ${combo.description}</div>
+                `;
+                recommendGrid.appendChild(card);
+            });
+        }
+
+        function resetSlot(slotId) {
+            document.getElementById(`avatarText${slotId}`).textContent = "將";
+            document.getElementById(`stats${slotId}`).innerHTML = `
+                <div class="stat-card"><div class="label">統率</div><div class="value">--</div></div>
+                <div class="stat-card"><div class="label">武力</div><div class="value">--</div></div>
+                <div class="stat-card"><div class="label">智力</div><div class="value">--</div></div>
+                <div class="stat-card"><div class="label">速度</div><div class="value">--</div></div>
+            `;
+            document.getElementById(`innate${slotId}`).value = "未選擇";
+        }
+
         function resetTeam() {
             if (confirm('確定要重置整個隊伍嗎？所有武將和戰法選擇將被清空。')) {
                 document.querySelectorAll('.officer-select').forEach(select => select.value = '');
                 for (let i = 1; i <= 3; i++) {
-                    document.getElementById(`avatarText${i}`).textContent = "將";
-                    document.getElementById(`stats${i}`).innerHTML = `
-                        <div class="stat-card"><div class="label">統率</div><div class="value">--</div></div>
-                        <div class="stat-card"><div class="label">武力</div><div class="value">--</div></div>
-                        <div class="stat-card"><div class="label">智力</div><div class="value">--</div></div>
-                        <div class="stat-card"><div class="label">速度</div><div class="value">--</div></div>
-                    `;
-                    document.getElementById(`innate${i}`).value = "未選擇";
+                    resetSlot(i);
                 }
                 document.querySelectorAll('.skill-select').forEach(select => {
                     if (select.tagName === 'SELECT') select.value = '';
                 });
                 updateTotalCost();
                 updatePreviewStats();
+                updateRecommendations();
+                document.getElementById('exportResult').style.display = 'none';
             }
+        }
+
+        function exportTeam() {
+            const teamData = [];
+            let totalCost = 0;
+            let totalLead = 0, totalStr = 0, totalInt = 0, totalSpd = 0;
+            
+            for (let i = 1; i <= 3; i++) {
+                const select = document.querySelector(`.officer-slot[data-slot="${i}"] .officer-select`);
+                const officerId = parseInt(select.value);
+                
+                if (officerId) {
+                    const officer = officersData.find(o => o.id === officerId);
+                    const skill1Select = document.querySelector(`.officer-slot[data-slot="${i}"] .skill-item:nth-child(2) select`);
+                    const skill2Select = document.querySelector(`.officer-slot[data-slot="${i}"] .skill-item:nth-child(3) select`);
+                    
+                    const skill1Id = parseInt(skill1Select.value);
+                    const skill2Id = parseInt(skill2Select.value);
+                    
+                    const skill1 = skill1Id ? skillsData.find(s => s.id === skill1Id) : null;
+                    const skill2 = skill2Id ? skillsData.find(s => s.id === skill2Id) : null;
+                    
+                    teamData.push({
+                        位置: i,
+                        武將: officer.name,
+                        COST: officer.cost,
+                        兵種: officer.type,
+                        固有戰法: officer.innate,
+                        戰法一: skill1 ? skill1.name : '未選擇',
+                        戰法二: skill2 ? skill2.name : '未選擇',
+                        屬性: officer.stats
+                    });
+                    
+                    totalCost += officer.cost;
+                    totalLead += officer.stats.lead;
+                    totalStr += officer.stats.str;
+                    totalInt += officer.stats.int;
+                    totalSpd += officer.stats.spd;
+                }
+            }
+            
+            const exportContent = `
+╔════════════════════════════════════════════════════════╗
+║        信長之野望 真戰 隊伍配置匯出                  ║
+╠════════════════════════════════════════════════════════╣
+║ 隊伍總COST: ${totalCost}/20                               ║
+║ 屬性總和: 統率${totalLead} 武力${totalStr} 智力${totalInt} 速度${totalSpd} ║
+╠════════════════════════════════════════════════════════╣
+${teamData.map(o => `
+║ 【位置${o.位置}】${o.武將} (${o.COST}C ${o.兵種})
+║   固有戰法: ${o.固有戰法}
+║   戰法一: ${o.戰法一}
+║   戰法二: ${o.戰法二}
+║   屬性: 統${o.屬性.lead} 武${o.屬性.str} 智${o.屬性.int} 速${o.屬性.spd}
+╠════════════════════════════════════════════════════════╣`).join('')}
+║ 匯出時間: ${new Date().toLocaleString('zh-HK')}        ║
+╚════════════════════════════════════════════════════════╝
+            `.trim();
+            
+            document.getElementById('exportContent').textContent = exportContent;
+            document.getElementById('exportResult').style.display = 'block';
+            
+            alert('隊伍配置已匯出！可複製下方文字分享給隊友。');
         }
     </script>
 </body>
